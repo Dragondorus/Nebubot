@@ -39,7 +39,7 @@ async def check_event():
             event_tab.append(obj)
     while not bot.is_closed:
         for item in event_tab:
-            await bot.send_message(channel, "You have a rendezvous planned at : " + item.str + "\n \"" + item.desc + "\"")
+            await bot.send_message(channel, "You have a rendez-vous planned at : " + item.str + "\n \"" + item.desc + "\"")
         await bot.send_message(channel, "@everyone, look at this reminder !")
         await asyncio.sleep(86400) # task will run every day - 86400 sec
 
