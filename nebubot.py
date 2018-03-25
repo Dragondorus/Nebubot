@@ -25,22 +25,59 @@ class Event(object):
         self.str = datetime.strftime("%Hh%M %d/%m/%Y")
         self.desc = desc
 
+def dele(id):
+    line_nbr = int(id)
+    max_line = sum(1 for line in open('dates.csv'))
+    if line_nbr >= max_line:
+        return
+    with open("dates.csv", "r") as inp, open ("new.csv", "w", newline='') as out:
+        old_csv = csv.reader(inp)
+        new_csv = csv.writer(out)
+
+        line_list = list(old_csv)
+        del line_list[line_nbr]
+        x = 0
+        while x < (max_line - 1):
+            line_list[x][0] = str(x)
+            x = x + 1
+        new_csv.writerows(line_list)
+    os.remove('dates.csv')
+    os.rename('new.csv' ,'dates.csv')
+    inp.close()
+    out.close()
 
 async def check_event():
     await bot.wait_until_ready()
     today = datetime.datetime.today()
     margin = datetime.timedelta(days = 3)
     event_tab = []
-    for row in csv.reader(open('dates.csv', 'r')):
-        date = datetime.datetime.strptime(row[1], '%Hh%M %d/%m/%Y')
-        desc = row[2]
-        obj = Event(date, desc)
-        if (today <= obj.dt <= today + margin):
-            event_tab.append(obj)
+    id = 0
+    k = 1
+    while (k == 1):
+        check = True
+        lol = 0
+        for row in csv.reader(open('dates.csv', 'r')):
+            date = datetime.datetime.strptime(row[1], '%Hh%M %d/%m/%Y')
+            desc = row[2]
+            obj = Event(date, desc)
+            if (today <= obj.dt <= today + margin):
+                event_tab.append(obj)
+
+
+            if (today > obj.dt and check == True):
+                id = row[0]
+                k = 1
+                check = False
+                lol = 1
+        if (check == False):
+            dele(id)
+        if (lol == 0):
+            k = 0
+
     while not bot.is_closed:
         for item in event_tab:
             await bot.send_message(discord.Object(id=general_channel_id), "@everyone, look at this reminder !"
-								   "You have a rendezvous planned at : " + item.str + "\n *" + item.desc + "*")
+								   " You have a rendezvous planned at : " + item.str + "\n *" + item.desc + "*")
         await asyncio.sleep(86400) # task will run every day - 86400 sec
 
 #toDoDB = []
@@ -216,7 +253,7 @@ async def check_rdv():
         for row in liste_csv:
             tempf.write("ID: " + row[0] + " | Date: " + row[1] + " | Description: " + row[2] + "\n")
     tempf.close()
-    with open('temp.txt', 'r') as tempf:
+    with open('temp.txt', 'r') as tempf:         
         await bot.say(tempf.read())
     os.remove('temp.txt')
     liste_rdv.close()
